@@ -32,6 +32,7 @@ if __name__ == '__main__':
     parser.add_argument("-mode", default='train', type=str, choices=['train', 'validate', 'test'])
     parser.add_argument("-bert_data_path", default='../bert_data_new/cnndm')
     parser.add_argument("-model_path", default='../models/')
+    parser.add_argument("-bert_model_name", default='bert-base-multilingual-uncased')
     parser.add_argument("-result_path", default='../results/cnndm')
     parser.add_argument("-temp_dir", default='../temp')
 
