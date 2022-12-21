@@ -1,0 +1,32 @@
+Bootstrap:docker
+From: ubuntu:22.04
+
+
+%post
+
+export LANG=C.UTF-8 LC_ALL=C.UTF-8
+export PATH=/opt/conda/bin:$PATH
+
+apt-get update && apt-get install -y apt-utils wget bzip2 ca-certificates \
+    libglib2.0-0 libxext6 libsm6 libxrender1 \
+    git mercurial subversion
+
+cd /tmp
+
+
+wget --quiet https://repo.anaconda.com/archive/Anaconda3-5.3.1-Linux-x86_64.sh -O ~/anaconda.sh && \
+    /bin/bash ~/anaconda.sh -b -p /opt/conda && \
+    rm ~/anaconda.sh && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc
+
+
+conda install pytorch=1.1.0 \
+    multiprocess \
+    numpy \
+    tensorboardX 
+
+
+pip install --no-cache-dir pyrouge==0.1.3 \
+    pytorch-transformers==1.2.0 

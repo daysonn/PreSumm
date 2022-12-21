@@ -1,7 +1,7 @@
 Erros:
     - Não encontra o caminho do dataset. Como corrigir? 
         - Colocar 'train', 'test' e 'valid' nos nomes dos arquivos de dataset
-        - 'test' e 'valid' datasets tem que tá no mesmo diretório no modo de validação
+        - 'test' e 'valid' datasets tem que tá no mesmo diretório durante o modo de validação
 
 
 Processar arquivos do dataset para lista de dicionários no formato json e salvar .json no diretório: /json_data
@@ -23,7 +23,7 @@ BertAbs:
 
 Avaliação:
     Baseline:
-    short: python train.py -task abs -mode validate -accum_count 5 -batch_size 4 -bert_data_path /home/dayson/Documentos/Mestrado/Dissertacao/PreSumm/bert_data/validation/dataset-pt-presumm.valid.0.bert.pt -log_file ../logs/cnndm_baseline -model_path ../models/baseline -save_checkpoint_steps 2000 -use_interval true -seed 777 -sep_optim false -use_bert_emb true -warmup_steps 8000 -visible_gpus -1 -max_pos 24 -report_every 50 -encoder baseline
+    short:  python train.py -task abs -mode validate -accum_count 5 -batch_size 4 -bert_data_path ../bert_data/valid -log_file ../logs/cnndm_baseline -model_path ../models/baseline -save_checkpoint_steps 2000 -use_interval true -seed 777 -sep_optim false -use_bert_emb true -warmup_steps 8000 -visible_gpus -1 -max_pos 24 -report_every 50 -encoder baseline
 
     BertAbs:
     full:  python train.py -task abs -mode validate -batch_size 3000 -test_batch_size 500 -bert_data_path ../bert_data -log_file ../logs/val_abs_bert_cnndm -model_path ../models -sep_optim true -use_interval true -visible_gpus 1 -max_pos 512 -max_length 200 -alpha 0.95 -min_length 50 -result_path ../logs/abs_bert_cnndm 
