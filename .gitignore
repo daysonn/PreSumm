@@ -1,3 +1,7 @@
 src/__pycache__/
 src/models/__pycache__/
 temp/
+models/
+json_data/
+src/models/__pycache__/
+src/prepro/__pycache__/
