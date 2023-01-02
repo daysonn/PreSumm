@@ -2,8 +2,6 @@ Bootstrap:docker
 From: nvidia/cuda:10.0-cudnn7-runtime-ubuntu18.04
 
 %post
-  pwd
-  ls /
 
   apt-get update -y
   apt-get install perl-base
