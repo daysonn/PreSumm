@@ -188,6 +188,7 @@ class GlobalAttention(nn.Module):
             mask = sequence_mask(memory_lengths, max_len=align.size(-1))
             mask = mask.unsqueeze(1)  # Make it broadcastable.
             align.masked_fill_(1 - mask, -float('inf'))
+            # align.masked_fill_(~mask, -float('inf'))
 
         align_vectors = F.softmax(align.view(batch*target_l, source_l), -1)
         align_vectors = align_vectors.view(batch, target_l, source_l)
