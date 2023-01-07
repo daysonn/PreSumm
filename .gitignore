@@ -7,3 +7,4 @@ src/models/__pycache__
 src/prepro/__pycache__
 raw_stories/
 saved_raw/
+*.sif
