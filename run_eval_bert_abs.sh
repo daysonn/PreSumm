@@ -1,11 +1,11 @@
 python /home/dayson/PreSumm/src/train.py \
 -task abs \
--mode train \
+-mode validate \
 -accum_count 1 \
 -batch_size 1 \
 -bert_data_path /home/dayson/PreSumm/bert_data \
 -dec_dropout 0.2 \
--log_file /home/dayson/PreSumm/logs/pt-br-bertAbs-train.log \
+-log_file /home/dayson/PreSumm/logs/pt-br-bertAbs-eval.log \
 -lr_bert 0.002 \
 -model_path /home/dayson/PreSumm/models \
 -save_checkpoint_steps 500 \

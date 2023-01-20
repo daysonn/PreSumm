@@ -26,7 +26,7 @@ from others.logging import logger, init_logger
 model_flags = ['hidden_size', 'ff_size', 'heads', 'emb_size', 'enc_layers', 'enc_hidden_size', 'enc_ff_size',
                'dec_layers', 'dec_hidden_size', 'dec_ff_size', 'encoder', 'ff_actv', 'use_interval']
 
-BERT_MODEL_NAME = 'bert-base-multilingual-uncased' # bert-base-uncased
+BERT_MODEL_TOKENIZER_NAME = '/home/dayson/PreSumm/pretrained_bertimbau/vocab.txt' #bert-base-multilingual-uncased # bert-base-uncased
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -119,9 +119,14 @@ class ErrorHandler(object):
 
 
 def validate_abs(args, device_id):
+    
+    def remove_files(list_files):
+        for model in list_files:
+            os.remove(model['name'])
+
     timestep = 0
     if (args.test_all):
-        cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+        cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
         cp_files.sort(key=os.path.getmtime)
         xent_lst = []
         for i, cp in enumerate(cp_files):
@@ -140,8 +145,23 @@ def validate_abs(args, device_id):
             step = int(cp.split('.')[-2].split('_')[-1])
             test_abs(args, device_id, cp, step)
     else:
+        delete_models = []
+        model_by_loss = {}
+        cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
+
+        # Including files removal based on loss when evaluating model
+        if len(cp_files)>1:
+            for cp in cp_files:
+                step = int(cp.split('.')[-2].split('_')[-1])
+                xent = validate(args, device_id, cp, step)
+                # test_abs(args, device_id, cp, step)
+                delete_models.append({'name':cp, 'loss':xent})
+
+            remove_files(delete_models.sort(key=lambda x: x['loss'])[1:])
+            model_by_loss[delete_models[0]['name']] = delete_models[0]['loss']
+        
         while (True):
-            cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+            cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]
@@ -152,10 +172,15 @@ def validate_abs(args, device_id):
                 if (time_of_cp > timestep):
                     timestep = time_of_cp
                     step = int(cp.split('.')[-2].split('_')[-1])
-                    validate(args, device_id, cp, step)
+                    xent = validate(args, device_id, cp, step)
+                    model_by_loss[cp] = xent
+                    delete_models = [{'name': model_path, 'loss': loss} for model_path, loss in model_by_loss.items()] 
                     test_abs(args, device_id, cp, step)
 
-            cp_files = sorted(glob.glob(os.path.join(args.model_path, 'model_step_*.pt')))
+                    # Removing model files based on loss when evaluating 
+                    remove_files(delete_models.sort(key=lambda x: x['loss'])[1:])
+
+            cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
             cp_files.sort(key=os.path.getmtime)
             if (cp_files):
                 cp = cp_files[-1]
@@ -163,7 +188,7 @@ def validate_abs(args, device_id):
                 if (time_of_cp > timestep):
                     continue
             else:
-                time.sleep(300)
+                time.sleep(60)
 
 
 def validate(args, device_id, pt, step):
@@ -172,6 +197,7 @@ def validate(args, device_id, pt, step):
         test_from = pt
     else:
         test_from = args.test_from
+    logger.info(args)
     logger.info('Loading checkpoint from %s' % test_from)
     checkpoint = torch.load(test_from, map_location=lambda storage, loc: storage)
     opt = vars(checkpoint['opt'])
@@ -181,13 +207,14 @@ def validate(args, device_id, pt, step):
     print(args)
 
     model = AbsSummarizer(args, device, checkpoint)
+    logger.info(model)
     model.eval()
 
     valid_iter = data_loader.Dataloader(args, load_dataset(args, 'valid', shuffle=False),
                                         args.batch_size, device,
                                         shuffle=False, is_test=False)
 
-    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_lower_case=True, cache_dir=args.temp_dir)
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_TOKENIZER_NAME, do_lower_case=True, cache_dir=args.temp_dir)
     symbols = {'BOS': tokenizer.vocab['[unused1]'], 'EOS': tokenizer.vocab['[unused2]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused3]']}
 
@@ -219,7 +246,7 @@ def test_abs(args, device_id, pt, step):
     test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
                                        args.test_batch_size, device,
                                        shuffle=False, is_test=True)
-    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_lower_case=True, cache_dir=args.temp_dir)
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_TOKENIZER_NAME, do_lower_case=True, cache_dir=args.temp_dir)
     symbols = {'BOS': tokenizer.vocab['[unused1]'], 'EOS': tokenizer.vocab['[unused2]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused3]']}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
@@ -247,7 +274,7 @@ def test_text_abs(args, device_id, pt, step):
     test_iter = data_loader.Dataloader(args, load_dataset(args, 'test', shuffle=False),
                                        args.test_batch_size, device,
                                        shuffle=False, is_test=True)
-    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_lower_case=True, cache_dir=args.temp_dir)
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_TOKENIZER_NAME, do_lower_case=True, cache_dir=args.temp_dir)
     symbols = {'BOS': tokenizer.vocab['[unused1]'], 'EOS': tokenizer.vocab['[unused2]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused3]']}
     predictor = build_predictor(args, tokenizer, symbols, model, logger)
@@ -322,8 +349,9 @@ def train_abs_single(args, device_id):
         optim = [model_builder.build_optim(args, model, checkpoint)]
 
     logger.info(model)
-
-    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_NAME, do_lower_case=True, cache_dir=args.temp_dir) 
+    logger.info(args)
+    
+    tokenizer = BertTokenizer.from_pretrained(BERT_MODEL_TOKENIZER_NAME, do_lower_case=True, cache_dir=args.temp_dir) 
     symbols = {'BOS': tokenizer.vocab['[unused1]'], 'EOS': tokenizer.vocab['[unused2]'],
                'PAD': tokenizer.vocab['[PAD]'], 'EOQ': tokenizer.vocab['[unused3]']}
 

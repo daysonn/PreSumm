@@ -1,4 +1,4 @@
-import os
+import os, glob
 
 import numpy as np
 import torch
@@ -157,6 +157,7 @@ class Trainer(object):
                             true_batchs, normalization, total_stats,
                             report_stats)
 
+                        x = report_stats.xent()
                         report_stats = self._maybe_report_training(
                             step, train_steps,
                             self.optims[0].learning_rate,
@@ -166,7 +167,7 @@ class Trainer(object):
                         accum = 0
                         normalization = 0
                         if (step % self.save_checkpoint_steps == 0 and self.gpu_rank == 0):
-                            self._save(step)
+                            self._save(step, x )
 
                         step += 1
                         if step > train_steps:
@@ -322,7 +323,7 @@ class Trainer(object):
 
         return stats
 
-    def _save(self, step):
+    def _save(self, step, loss):
         real_model = self.model
         # real_generator = (self.generator.module
         #                   if isinstance(self.generator, torch.nn.DataParallel)
@@ -336,10 +337,26 @@ class Trainer(object):
             'opt': self.args,
             'optims': self.optims,
         }
-        checkpoint_path = os.path.join(self.args.model_path, 'model_step_%d.pt' % step)
+        model_name = f'model_loss_{str(round(loss, 2))}_step_{step}.pt'
+        checkpoint_path = os.path.join(self.args.model_path, model_name)
+        save = True
+
+        if True: # Mudar aqui quando quiser que remova arquivos a medida que o treino acontece
+            print('Loss atual:',loss)
+            cp_files = sorted(glob.glob(os.path.join(self.args.model_path, '*.pt')))
+            r = [(f, float(f.split('_')[2].split('.')[0])) for f in cp_files]
+            if r and len(cp_files)>1:
+                min_r = max(r, key=lambda x: x[1])
+                print('Loss arquivo:', min_r[1])
+                print("removing:", min_r[0])
+                if min_r[1] <= loss:
+                    os.remove(min_r[0])
+                else:
+                    save = False
+
         logger.info("Saving checkpoint %s" % checkpoint_path)
         # checkpoint_path = '%s_step_%d.pt' % (FLAGS.model_path, step)
-        if (not os.path.exists(checkpoint_path)):
+        if (not os.path.exists(checkpoint_path)) and save:
             torch.save(checkpoint, checkpoint_path)
             return checkpoint, checkpoint_path
 

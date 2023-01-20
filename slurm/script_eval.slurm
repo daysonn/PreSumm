@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=gpu-titan-rtx      # -p
+#SBATCH --partition=gpu-rtx3090      # -p
 #SBATCH --constraint=GPU              # -C feature
 #SBATCH --gres=gpu:1                  # 1 GPU per node
 #SBATCH --nodes=1                     # -N | node count, 1 nodes reserved
@@ -7,4 +7,4 @@
 #SBATCH --output=./logs/slurm.log     # Standard output and error log
 #SBATCH --error=./logs/slurm.log
 
-apptainer run --nv /scratch/dayson/bert-presumm-v2.sif /home/dayson/PreSumm/run_train_bert_abs.sh
+apptainer run --nv /scratch/dayson/bert-presumm-v2.sif /home/dayson/PreSumm/run_eval_bert_abs.sh

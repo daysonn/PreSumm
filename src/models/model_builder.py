@@ -116,9 +116,9 @@ class Bert(nn.Module):
     def __init__(self, large, temp_dir, finetune=False):
         super(Bert, self).__init__()
         if(large):
-            self.model = BertModel.from_pretrained('bert-base-multilingual-uncased', cache_dir=temp_dir)
+            self.model = BertModel.from_pretrained('/home/dayson/PreSumm/pretrained_bertimbau/')# bert-base-multilingual-uncased', cache_dir=temp_dir)
         else:
-            self.model = BertModel.from_pretrained('bert-base-multilingual-uncased', cache_dir=temp_dir) # bert-base-uncased
+            self.model = BertModel.from_pretrained('/home/dayson/PreSumm/pretrained_bertimbau/') #bert-base-multilingual-uncased', cache_dir=temp_dir) # bert-base-uncased
 
         self.finetune = finetune
 

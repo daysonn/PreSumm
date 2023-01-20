@@ -122,7 +122,7 @@ class ReportMgr(ReportMgrBase):
         """
         report_stats.output(step, num_steps,
                             learning_rate, self.start_time)
-
+        
         # Log the progress using the number of batches on the x-axis.
         self.maybe_log_tensorboard(report_stats,
                                    "progress",
@@ -165,7 +165,7 @@ class Statistics(object):
     * elapsed time
     """
 
-    def __init__(self, loss=0, n_words=0, n_correct=0):
+    def __init__(self, loss=0, n_words=0.0001, n_correct=0):
         self.loss = loss
         self.n_words = n_words
         self.n_docs = 0
@@ -271,6 +271,7 @@ class Statistics(object):
                self.n_words / (t + 1e-5),
                time.time() - start))
         sys.stdout.flush()
+        return self.xent()
 
     def log_tensorboard(self, prefix, writer, learning_rate, step):
         """ display statistics to tensorboard """
