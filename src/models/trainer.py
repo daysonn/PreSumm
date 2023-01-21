@@ -341,7 +341,7 @@ class Trainer(object):
         checkpoint_path = os.path.join(self.args.model_path, model_name)
         save = True
 
-        if True: # Mudar aqui quando quiser que remova arquivos a medida que o treino acontece
+        if False: # Mudar aqui quando quiser que remova arquivos a medida que o treino acontece
             print('Loss atual:',loss)
             cp_files = sorted(glob.glob(os.path.join(self.args.model_path, '*.pt')))
             r = [(f, float(f.split('_')[2].split('.')[0])) for f in cp_files]

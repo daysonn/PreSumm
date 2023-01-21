@@ -120,7 +120,7 @@ class Rouge155(object):
         self.__set_dir_properties()
         self._config_file = None
         self._settings_file = self.__get_config_path()
-        self.__set_rouge_dir(rouge_dir)
+        self.__set_rouge_dir(rouge_dir) # rouge_dir = None
         self.args = self.__clean_rouge_args(rouge_args)
         self._system_filename_pattern = None
         self._model_filename_pattern = None
@@ -429,14 +429,18 @@ class Rouge155(object):
     ###################################################################
     # Private methods
 
-    def __set_rouge_dir(self, home_dir=None):
+    def __set_rouge_dir(self, home_dir=None): # home_dir se mantém como None
         """
         Verfify presence of ROUGE-1.5.5.pl and data folder, and set
         those paths.
 
         """
-        if not home_dir:
-            self._home_dir = self.__get_rouge_home_dir_from_settings()
+        home_dir='/pyrouge/tools/ROUGE-1.5.5/'
+        if os.path.exists(home_dir):
+            print(f"Path {home_dir} exists")
+
+        if not home_dir: # True
+            self._home_dir = os.getenv('SET_ROUGE_PATH') # self.__get_rouge_home_dir_from_settings()
         else:
             self._home_dir = home_dir
             self.save_home_dir()

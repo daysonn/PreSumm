@@ -1,14 +1,14 @@
 python /home/dayson/PreSumm/src/train.py \
 -task abs \
 -mode validate \
--accum_count 1 \
--batch_size 1 \
+-accum_count 5 \
+-batch_size 96 \
 -bert_data_path /home/dayson/PreSumm/bert_data \
 -dec_dropout 0.2 \
 -log_file /home/dayson/PreSumm/logs/pt-br-bertAbs-eval.log \
 -lr_bert 0.002 \
 -model_path /home/dayson/PreSumm/models \
--save_checkpoint_steps 500 \
+-save_checkpoint_steps 2000 \
 -use_interval true \
 -sep_optim true \
 -lr_dec 0.2 \
@@ -18,4 +18,5 @@ python /home/dayson/PreSumm/src/train.py \
 -visible_gpus 0 \
 -warmup_steps_dec 10000 \
 -max_pos 3000 \
--report_every 20
+-result_path /home/dayson/PreSumm/results/results \
+-report_every 50

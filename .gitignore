@@ -3,4 +3,5 @@ models/
 json_data/
 raw_stories/
 saved_raw/
+pretrained_bertimbau/
 *.sif

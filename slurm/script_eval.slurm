@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=gpu-rtx3090      # -p
+#SBATCH --partition=gpu-titan-xp      # -p
 #SBATCH --constraint=GPU              # -C feature
 #SBATCH --gres=gpu:1                  # 1 GPU per node
 #SBATCH --nodes=1                     # -N | node count, 1 nodes reserved

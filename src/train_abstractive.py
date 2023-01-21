@@ -121,8 +121,8 @@ class ErrorHandler(object):
 def validate_abs(args, device_id):
     
     def remove_files(list_files):
-        for model in list_files:
-            os.remove(model['name'])
+        if len(list_files)>0:
+            _ = [os.remove(model['name']) for model in list_files]
 
     timestep = 0
     if (args.test_all):
@@ -147,18 +147,18 @@ def validate_abs(args, device_id):
     else:
         delete_models = []
         model_by_loss = {}
-        cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
+        # cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
 
         # Including files removal based on loss when evaluating model
-        if len(cp_files)>1:
-            for cp in cp_files:
-                step = int(cp.split('.')[-2].split('_')[-1])
-                xent = validate(args, device_id, cp, step)
-                # test_abs(args, device_id, cp, step)
-                delete_models.append({'name':cp, 'loss':xent})
+        # if len(cp_files)>1:
+        #     for cp in cp_files:
+        #         step = int(cp.split('.')[-2].split('_')[-1])
+        #         xent = validate(args, device_id, cp, step)
+        #         # test_abs(args, device_id, cp, step)
+        #         delete_models.append({'name':cp, 'loss':xent})
 
-            remove_files(delete_models.sort(key=lambda x: x['loss'])[1:])
-            model_by_loss[delete_models[0]['name']] = delete_models[0]['loss']
+        #     remove_files(delete_models.sort(key=lambda x: x['loss'])[1:])
+        #     model_by_loss[delete_models[0]['name']] = delete_models[0]['loss']
         
         while (True):
             cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
@@ -178,7 +178,10 @@ def validate_abs(args, device_id):
                     test_abs(args, device_id, cp, step)
 
                     # Removing model files based on loss when evaluating 
-                    remove_files(delete_models.sort(key=lambda x: x['loss'])[1:])
+                    delete_models.sort(key=lambda x: x['loss'])
+                    print(delete_models)
+                    remove_files(delete_models[1:])
+                    delete_models = delete_models[:1]
 
             cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
             cp_files.sort(key=os.path.getmtime)
