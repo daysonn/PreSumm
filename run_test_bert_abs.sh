@@ -1,15 +1,14 @@
 python /home/dayson/PreSumm/src/train.py \
 -task abs \
--mode validate \
+-mode test \
+-test_from /home/dayson/PreSumm/models/model_loss_2.36_step_14000.pt \
 -accum_count 5 \
 -batch_size 96 \
 -bert_data_path /scratch/dayson/PreSumm/bert_data \
--delete_models False \
--metrics xent \
 -dec_dropout 0.2 \
--log_file /scratch/dayson/PreSumm/logs/pt-br-bertAbs-eval.log \
+-log_file /home/dayson/PreSumm/logs/pt-br-bertAbs-eval.log \
+-model_path /home/dayson/PreSumm/models \
 -lr_bert 0.002 \
--model_path /scratch/dayson/PreSumm/models \
 -save_checkpoint_steps 2000 \
 -use_interval true \
 -sep_optim true \
@@ -22,5 +21,5 @@ python /home/dayson/PreSumm/src/train.py \
 -max_pos 3000 \
 -min_length 100 \
 -max_length 400 \
--result_path /scratch/dayson/PreSumm/results/results \
+-result_path /home/dayson/PreSumm/results/results \
 -report_every 50

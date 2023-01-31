@@ -26,7 +26,7 @@ from others.logging import logger, init_logger
 model_flags = ['hidden_size', 'ff_size', 'heads', 'emb_size', 'enc_layers', 'enc_hidden_size', 'enc_ff_size',
                'dec_layers', 'dec_hidden_size', 'dec_ff_size', 'encoder', 'ff_actv', 'use_interval']
 
-BERT_MODEL_TOKENIZER_NAME = '/home/dayson/PreSumm/pretrained_bertimbau/vocab.txt' #bert-base-multilingual-uncased # bert-base-uncased
+BERT_MODEL_TOKENIZER_NAME = '/scratch/dayson/PreSumm/pretrained_bertimbau/vocab.txt' #bert-base-multilingual-uncased # bert-base-uncased
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -122,7 +122,14 @@ def validate_abs(args, device_id):
     
     def remove_files(list_files):
         if len(list_files)>0:
-            _ = [os.remove(model['name']) for model in list_files]
+            for model in list_files:
+                os.remove(model['name'])
+                result_files = glob.glob(os.path.join(args.result_path, f'results.{model["step"]}.*'))
+                for f in result_files:
+                    try:
+                        os.remove(f)
+                    except Exception as e:
+                        print(e)
 
     timestep = 0
     if (args.test_all):
@@ -134,7 +141,8 @@ def validate_abs(args, device_id):
             if (args.test_start_from != -1 and step < args.test_start_from):
                 xent_lst.append((1e6, cp))
                 continue
-            xent = validate(args, device_id, cp, step)
+            stats = validate(args, device_id, cp, step)
+            xent = stats.xent()
             xent_lst.append((xent, cp))
             max_step = xent_lst.index(min(xent_lst))
             if (i - max_step > 10):
@@ -146,19 +154,6 @@ def validate_abs(args, device_id):
             test_abs(args, device_id, cp, step)
     else:
         delete_models = []
-        model_by_loss = {}
-        # cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
-
-        # Including files removal based on loss when evaluating model
-        # if len(cp_files)>1:
-        #     for cp in cp_files:
-        #         step = int(cp.split('.')[-2].split('_')[-1])
-        #         xent = validate(args, device_id, cp, step)
-        #         # test_abs(args, device_id, cp, step)
-        #         delete_models.append({'name':cp, 'loss':xent})
-
-        #     remove_files(delete_models.sort(key=lambda x: x['loss'])[1:])
-        #     model_by_loss[delete_models[0]['name']] = delete_models[0]['loss']
         
         while (True):
             cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
@@ -172,16 +167,29 @@ def validate_abs(args, device_id):
                 if (time_of_cp > timestep):
                     timestep = time_of_cp
                     step = int(cp.split('.')[-2].split('_')[-1])
-                    xent = validate(args, device_id, cp, step)
-                    model_by_loss[cp] = xent
-                    delete_models = [{'name': model_path, 'loss': loss} for model_path, loss in model_by_loss.items()] 
+                    stats = validate(args, device_id, cp, step)
+
+                    if args.metrics == 'xent':
+                        metrics = stats.xent()
+                    elif args.metrics == 'perplexity':
+                        metrics = -stats.ppl()
+                    else:
+                        metrics = -stats.accuracy()
+
+                    obj = {'name': cp, 'metrics': metrics, 'step': step}
+                    if obj not in delete_models:
+                        delete_models.append(obj)
+
                     test_abs(args, device_id, cp, step)
 
-                    # Removing model files based on loss when evaluating 
-                    delete_models.sort(key=lambda x: x['loss'])
+                    # Removing model files based on any metrics when evaluating 
+                    delete_models.sort(key=lambda x: x['metrics'])
                     print(delete_models)
-                    remove_files(delete_models[1:])
-                    delete_models = delete_models[:1]
+                    
+                    if args.delete_models != -1:
+                        remove_files(delete_models[args.delete_model-1:])
+
+                    delete_models = delete_models[:args.delete_model-1]
 
             cp_files = sorted(glob.glob(os.path.join(args.model_path, '*.pt')))
             cp_files.sort(key=os.path.getmtime)
@@ -191,7 +199,7 @@ def validate_abs(args, device_id):
                 if (time_of_cp > timestep):
                     continue
             else:
-                time.sleep(60)
+                time.sleep(60*4)
 
 
 def validate(args, device_id, pt, step):
@@ -225,7 +233,7 @@ def validate(args, device_id, pt, step):
 
     trainer = build_trainer(args, device_id, model, None, valid_loss)
     stats = trainer.validate(valid_iter, step)
-    return stats.xent()
+    return stats # Pode ser apenas stats
 
 
 def test_abs(args, device_id, pt, step):

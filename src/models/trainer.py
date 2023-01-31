@@ -9,6 +9,9 @@ from models.reporter import ReportMgr, Statistics
 from others.logging import logger
 from others.utils import test_rouge, rouge_results_to_str
 
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
 
 def _tally_parameters(model):
     n_params = sum([p.nelement() for p in model.parameters()])
@@ -342,7 +345,7 @@ class Trainer(object):
         save = True
 
         if False: # Mudar aqui quando quiser que remova arquivos a medida que o treino acontece
-            print('Loss atual:',loss)
+            print('Loss atual:', loss)
             cp_files = sorted(glob.glob(os.path.join(self.args.model_path, '*.pt')))
             r = [(f, float(f.split('_')[2].split('.')[0])) for f in cp_files]
             if r and len(cp_files)>1:
@@ -358,6 +361,7 @@ class Trainer(object):
         # checkpoint_path = '%s_step_%d.pt' % (FLAGS.model_path, step)
         if (not os.path.exists(checkpoint_path)) and save:
             torch.save(checkpoint, checkpoint_path)
+
             return checkpoint, checkpoint_path
 
     def _start_report_manager(self, start_time=None):

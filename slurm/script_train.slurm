@@ -3,8 +3,16 @@
 #SBATCH --constraint=GPU              # -C feature
 #SBATCH --gres=gpu:1                  # 1 GPU per node
 #SBATCH --nodes=1                     # -N | node count, 1 nodes reserved
-#SBATCH --time=3-00:00:00             # -t | total run time limit (HH:MM:SS)
+#SBATCH --time=7-00:00:00             # -t | total run time limit (HH:MM:SS)
 #SBATCH --output=./logs/slurm.log     # Standard output and error log
 #SBATCH --error=./logs/slurm.log
 
-apptainer run --nv /scratch/dayson/bert-presumm-v2.sif /home/dayson/PreSumm/run_train_bert_abs.sh
+######################
+export APPTAINER_BIND="/scratch/$USER"
+export CONTAINER_FILE="/scratch/dayson/bert-presumm-v2.sif"
+######################
+#
+# Start job
+#
+
+apptainer run --nv ${CONTAINER_FILE} /home/dayson/PreSumm/run_train_bert_abs.sh

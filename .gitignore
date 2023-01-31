@@ -1,5 +1,5 @@
 temp/
-models/
+./models/
 json_data/
 raw_stories/
 saved_raw/
