@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import torch
+import glob
 from tensorboardX import SummaryWriter
 
 import distributed
@@ -166,7 +167,7 @@ class Trainer(object):
                         accum = 0
                         normalization = 0
                         if (step % self.save_checkpoint_steps == 0 and self.gpu_rank == 0):
-                            self._save(step)
+                            self._save(step, report_stats.xent())
 
                         step += 1
                         if step > train_steps:
@@ -322,7 +323,7 @@ class Trainer(object):
 
         return stats
 
-    def _save(self, step):
+    def _save(self, step, loss=None):
         real_model = self.model
         # real_generator = (self.generator.module
         #                   if isinstance(self.generator, torch.nn.DataParallel)
@@ -336,10 +337,22 @@ class Trainer(object):
             'opt': self.args,
             'optims': self.optims,
         }
-        checkpoint_path = os.path.join(self.args.model_path, 'model_step_%d.pt' % step)
+        model_name = 'model_step_%d.pt' % step if not loss else f'model_loss_{loss}_step_{step}.pt'
+        checkpoint_path = os.path.join(self.args.model_path, model_name)
+        save = True
+
+        if loss:
+            cp_files = sorted(glob.glob(os.path.join(self.args.model_path, '*.pt')))
+            r = [(f, f.split('_')[2]) for f in cp_files]
+            min_r = min(r, lambda x: x[1])
+            if float(min_r[1]) < loss:
+                os.remove(min_r[0])
+            else:
+                save = False
+
         logger.info("Saving checkpoint %s" % checkpoint_path)
         # checkpoint_path = '%s_step_%d.pt' % (FLAGS.model_path, step)
-        if (not os.path.exists(checkpoint_path)):
+        if (not os.path.exists(checkpoint_path)) and save:
             torch.save(checkpoint, checkpoint_path)
             return checkpoint, checkpoint_path
 
